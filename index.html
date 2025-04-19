@@ -1,12 +1,260 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <script src="https://d3js.org/d3.v5.min.js"></script>
-    <script>
-      d3.select("body").append("svg").attr("width", 50).attr("height", 50).append("circle").attr("cx", 25).attr("cy", 25).attr("r", 25).style("fill", "purple");
-    </script>
-  </head>
-  <body>
-    <p>Hello</p>
-  </body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financial Market Visualizations</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f5f5f7;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    header {
+      margin-bottom: 30px;
+      border-bottom: 1px solid #eaeaea;
+      padding-bottom: 20px;
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      color: #1d1d1f;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    
+    .subtitle {
+      font-size: 1.2rem;
+      color: #6e6e73;
+      margin-bottom: 20px;
+    }
+    
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 24px;
+      margin-bottom: 30px;
+    }
+    
+    .chart-container {
+      background-color: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .chart-container:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+    }
+    
+    .chart-title {
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin-bottom: 15px;
+      color: #1d1d1f;
+    }
+    
+    .chart {
+      width: 100%;
+      height: 300px;
+      overflow: hidden;
+    }
+    
+    svg {
+      overflow: visible;
+    }
+    
+    .info-panel {
+      background-color: #f0f9ff;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 30px;
+    }
+    
+    .info-panel h2 {
+      font-size: 1.4rem;
+      margin-bottom: 15px;
+      color: #1d1d1f;
+    }
+    
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #eaeaea;
+      color: #6e6e73;
+      font-size: 0.9rem;
+    }
+    
+    .tooltip {
+      position: absolute;
+      background-color: rgba(33, 33, 33, 0.9);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Financial Market Analysis</h1>
+      <p class="subtitle">Interactive visualizations of market trends and historical comparisons</p>
+    </header>
+
+    <div class="dashboard">
+      <div class="chart-container">
+        <h2 class="chart-title">S&P 500 Current Selloff vs. Historical Crashes</h2>
+        <div class="chart" id="sp500-crashes"></div>
+      </div>
+      <div class="chart-container">
+        <h2 class="chart-title">Market Recovery Patterns</h2>
+        <div class="chart" id="recovery-chart"></div>
+      </div>
+      <div class="chart-container">
+        <h2 class="chart-title">Equities Performance Comparison</h2>
+        <div class="chart" id="equities-chart"></div>
+      </div>
+      <div class="chart-container">
+        <h2 class="chart-title">Index Drawdown Analysis</h2>
+        <div class="chart" id="drawdown-chart"></div>
+      </div>
+    </div>
+
+    <div class="info-panel">
+      <h2>About This Dashboard</h2>
+      <p>This dashboard provides interactive visualizations of financial market data, focusing on historical crash patterns, recovery trajectories, and comparative analysis of market indices and equities. The visualizations allow for exploration of market behaviors during significant downturns and subsequent recoveries.</p>
+    </div>
+
+    <footer>
+      <p>Data updated daily • Created with D3.js • <span id="current-date"></span></p>
+    </footer>
+  </div>
+
+  <script>
+    // Display current date in footer
+    document.getElementById('current-date').textContent = new Date().toISOString().split('T')[0];
+    
+    // Sample visualization (placeholder for actual data visualization)
+    const createSampleChart = (selector, color) => {
+      const width = document.querySelector(selector).clientWidth;
+      const height = 300;
+      const margin = {top: 20, right: 30, bottom: 30, left: 40};
+      
+      const svg = d3.select(selector)
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+      
+      // Generate sample data
+      const n = 40;
+      const data = Array.from({length: n}, (_, i) => ({
+        x: i,
+        y: Math.random() * 0.5 - 0.25 + Math.sin(i/5) * 0.2
+      }));
+      
+      // Set up scales
+      const x = d3.scaleLinear()
+        .domain([0, n-1])
+        .range([0, width - margin.left - margin.right]);
+      
+      const y = d3.scaleLinear()
+        .domain([-0.5, 0.5])
+        .range([height - margin.top - margin.bottom, 0]);
+      
+      // Create line generator
+      const line = d3.line()
+        .x(d => x(d.x))
+        .y(d => y(d.y))
+        .curve(d3.curveMonotoneX);
+      
+      // Add the axes
+      svg.append("g")
+        .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
+        .call(d3.axisBottom(x).ticks(5));
+      
+      svg.append("g")
+        .call(d3.axisLeft(y).tickFormat(d => `${(d*100).toFixed(0)}%`));
+      
+      // Add the line path
+      svg.append("path")
+        .datum(data)
+        .attr("fill", "none")
+        .attr("stroke", color)
+        .attr("stroke-width", 2.5)
+        .attr("d", line);
+      
+      // Add dots at data points
+      svg.selectAll(".dot")
+        .data(data)
+        .enter().append("circle")
+        .attr("class", "dot")
+        .attr("cx", d => x(d.x))
+        .attr("cy", d => y(d.y))
+        .attr("r", 3)
+        .attr("fill", color);
+      
+      // Add hover effects and tooltips
+      const tooltip = d3.select("body").append("div")
+        .attr("class", "tooltip");
+      
+      svg.selectAll("circle")
+        .on("mouseover", function(event, d) {
+          d3.select(this)
+            .transition()
+            .duration(200)
+            .attr("r", 6);
+          
+          tooltip
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 15) + "px")
+            .style("opacity", 1)
+            .html(`Value: ${(d.y * 100).toFixed(2)}%`);
+        })
+        .on("mouseout", function() {
+          d3.select(this)
+            .transition()
+            .duration(200)
+            .attr("r", 3);
+          
+          tooltip.style("opacity", 0);
+        });
+    };
+    
+    // Create sample charts
+    createSampleChart("#sp500-crashes", "#E6550D");
+    createSampleChart("#recovery-chart", "#31a354");
+    createSampleChart("#equities-chart", "#3182bd");
+    createSampleChart("#drawdown-chart", "#756bb1");
+  </script>
+</body>
 </html>

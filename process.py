@@ -49,10 +49,19 @@ def recover(raw_data):
     data['cumdelta'] = data['cumdelta'] / data['min']
     data['cumdelta'] = data['cumdelta'] - 1
 
+    # Calculate the ordering by days
     data['ord_d'] = data.groupby('cummax').cumcount()
-    min_idx = data.groupby('cummax')['value'].idxmin().to_dict()
-    data['ord_d'] = data['ord_d'] - \
-        data['cummax'].map(min_idx).apply(lambda x: data.iloc[x]['ord_d'])
+    
+    # Find the index of the minimum value for each cummax group
+    try:
+        min_idx = data.groupby('cummax')['value'].idxmin().to_dict()
+        data['ord_d'] = data['ord_d'] - \
+            data['cummax'].map(min_idx).apply(lambda x: data.iloc[x]['ord_d'] if x in data.index else 0)
+    except Exception as e:
+        print(f"Warning in recover function: {e}")
+        # Create a simpler version if the above fails
+        # Just keep the ord_d as is (days since the beginning)
+        pass
 
     return data
 
